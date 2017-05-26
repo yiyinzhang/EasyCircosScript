@@ -53,7 +53,7 @@ my $abs = $Bin;
 GetOptions
 (
 	'fai|F=s'  => \$fai,
-	'kary|K'  => \$kary,
+	'kary|K=s'  => \$kary,
 	'samples|S=s' =>\$samples,
 	'cov|C=s' =>\$covList,
 	'plotPath|P=s' =>\$plotCircosPath,
