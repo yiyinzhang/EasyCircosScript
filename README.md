@@ -4,7 +4,7 @@ EasyCircosScript
 1. Introduction
 ---
 
-this Perl script is designed for generate configuration files of plotting circos automatically in the processing of NGS data. In particular, It can just plot the coverage plot for mapping of NGS reads in this version now. And I will add more fuctions to the program to make it can adapt to more types of circos plots, such as gene fusion plot, miRNA circos cirocs plot and etc.
+This Perl script is designed for generate configuration files of plotting circos automatically in the processing of NGS data. In particular, It can just plot the coverage plot for mapping of NGS reads in this version now. And I will add more fuctions to the program to make it can adapt to more types of circos plots, such as gene fusion plot, miRNA circos cirocs plot and etc.
 
 2. Data required
 ---
