@@ -17,6 +17,6 @@ You also need the fai file of the genome build you use as a reference genome.
 
 3. Usage
 ---
-perl EazyCircosScript.pl --kary|K <genome name> --fai|F <fasta index file> --samples|S <sample name> --cov|C <path to coverage file> --plotPath|P <path to plot Circos>
+	perl EazyCircosScript.pl --kary|K <genome name> --fai|F <fasta index file> --samples|S <sample name> --cov|C <path to coverage file> --plotPath|P <path to plot Circos>
 
 	
