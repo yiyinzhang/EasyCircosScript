@@ -298,7 +298,7 @@ if($type eq "coverage")
 	mkdir("$abs/circos_coverage");
 	system("cp $fai $abs/circos_coverage");
 	system("mv $abs/circos_coverage/*fai $abs/circos_coverage/$kary.fa.fai");
-	system("cp $covList/*cov.txt $abs/circos_coverage");
+	system("cp $covList/*genome.txt $abs/circos_coverage");
 	my $samples1 = \@allSamples1;
 	mkdir("$abs/circos_coverage/");
 	&coverage($kary, $abs, $samples1);
