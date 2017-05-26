@@ -67,6 +67,12 @@ unless(defined($samples))
         Pod::Usage::pod2usage(-exitstatus => 2);
     }
 
+sub logfunc
+{
+	(my $sampleName) = @_;
+	
+}
+
 sub coverage
 {
 	(my $kary, my $abs, my $sampleName) = @_;
@@ -116,24 +122,24 @@ sub sampleCoverageFile
 	my ($sampleFile) = @_;
 	foreach my $sample (@$sampleFile)
 	{
-		open(FILE, "$Bin/circos_coverage/${sample}.cov.txt")|| die $!;
-		open(OUT, ">$Bin/circos_coverage/${sample}.out.cov")||die $!;
+		open(FILE, "$plotCircosPath/circos_coverage/${sample}.genome.cov")|| die "no ${sample}.genome.cov";
+		open(OUT, ">$plotCircosPath/circos_coverage/${sample}.out.cov")||die $!;
 		while(<FILE>)
 		{
 			chomp;
 			my @data = split('\t',$_);
-			if($data[0] !~ /chr/)
+			if($data[0] !~ /chr/i)
 			{
 				$data[0] = "chr".$data[0];
 			}
 			$data[3] = log($data[3] + 1)/log(2);
-			my $str = join("\t", @data);
-			print OUT "$str\n"
+			print OUT join("\t", @data[0..$#data], "\n");
 		}
 		close FILE;
 		close OUT;
 	}
 }
+
 
 sub name_conf
 {
