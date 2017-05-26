@@ -293,19 +293,22 @@ my @allSamples1 = @$sample;
 my @allSamples2 = @$sample;
 my @allSamples3 = @$sample;
 my $type = "coverage";
-if($type eq "coverage")
+if($^O eq "linux")
 {
-	mkdir("$abs/circos_coverage");
-	system("cp $fai $abs/circos_coverage");
-	system("mv $abs/circos_coverage/*fai $abs/circos_coverage/$kary.fa.fai");
-	system("cp $covList/*genome.cov $abs/circos_coverage");
-	my $samples1 = \@allSamples1;
-	mkdir("$abs/circos_coverage/");
-	&coverage($kary, $abs, $samples1);
-	my $samples2 = \@allSamples2;
-	&sampleCoverageFile($samples2);
-	my $samples3 = \@allSamples3;
-	&fai2genomeFile($kary);
-	&name_conf($samples3);
-	&other_scripts;
+	if($type eq "coverage")
+	{
+		mkdir("$abs/circos_coverage");
+		system("cp $fai $abs/circos_coverage");
+		system("mv $abs/circos_coverage/*fai $abs/circos_coverage/$kary.fa.fai");
+		system("cp $covList/*genome.cov $abs/circos_coverage");
+		my $samples1 = \@allSamples1;
+		mkdir("$abs/circos_coverage/");
+		&coverage($kary, $abs, $samples1);
+		my $samples2 = \@allSamples2;
+		&sampleCoverageFile($samples2);
+		my $samples3 = \@allSamples3;
+		&fai2genomeFile($kary);
+		&name_conf($samples3);
+		&other_scripts;
+	}
 }
