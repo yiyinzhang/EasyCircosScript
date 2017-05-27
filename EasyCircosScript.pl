@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 use strict;
-use FindBin qw($Bin);
 use Getopt::Long; 
 use Pod::Usage ();
 use POSIX;
@@ -12,7 +11,7 @@ EasyCircosScript
 =head1 SYNOPSIS
 
 Use:
-perl EazyCircosScript.pl --kary|K <genome name> --fai|F <fasta index file> --samples|S <sample name> --cov|C <path to coverage file> --plotPath|P <path to plot Circos>
+perl EazyCircosScript.pl --type|T <RNA|miRNA> --kary|K <genome name> --fai|F <fasta index file> --chrIndex|I <chromosome Name Index> --samples|S <sample name> --cov|C <path to coverage file> --plotPath|P <path to plot Circos>
 
 =head1 DESCRIPTION
 
@@ -48,7 +47,8 @@ my $samples;
 my $fai;
 my $covList;
 my $plotCircosPath;
-my $abs = $Bin;
+my $chrIndex;
+my $type;
 
 GetOptions
 (
@@ -57,37 +57,33 @@ GetOptions
 	'samples|S=s' =>\$samples,
 	'cov|C=s' =>\$covList,
 	'plotPath|P=s' =>\$plotCircosPath,
+	'chrIndex|I=s' =>\$chrIndex,
+	'type|T=s' =>\$type,
 	'help' => \$help,
 );
 
 Pod::Usage::pod2usage(-verbose =>1)if($help);
 
 unless(defined($samples))
-    {
-        Pod::Usage::pod2usage(-exitstatus => 2);
-    }
-
-sub logfunc
 {
-	(my $sampleName) = @_;
-	
+	Pod::Usage::pod2usage(-exitstatus => 2);
 }
 
 sub coverage
 {
-	(my $kary, my $abs, my $sampleName) = @_;
+	(my $kary, my $plotCircosPath, my $sampleName) = @_;
 	my $colour = ['red', 'vlorange', 'yellow', 'green', 'blue', 'purple'];
 	my $outer = ["0.85", "0.73", "0.61", "0.49", "0.37", "0.25"];
 	my $inner = ["0.75", "0.63", "0.51", "0.39", "0.27", "0.15"];
-	my @first4elements;
+	my @first6elements;
 	if(@$sampleName >= 6)
 	{
-		$first4elements[0] = $$sampleName[0];
-		$first4elements[1] = $$sampleName[1];
-		$first4elements[2] = $$sampleName[2];
-		$first4elements[3] = $$sampleName[3];
-		$first4elements[4] = $$sampleName[4];
-		$first4elements[5] = $$sampleName[5];
+		$first6elements[0] = $$sampleName[0];
+		$first6elements[1] = $$sampleName[1];
+		$first6elements[2] = $$sampleName[2];
+		$first6elements[3] = $$sampleName[3];
+		$first6elements[4] = $$sampleName[4];
+		$first6elements[5] = $$sampleName[5];
 		shift @$sampleName;
 		shift @$sampleName;
 		shift @$sampleName;
@@ -96,24 +92,24 @@ sub coverage
 		shift @$sampleName;
 		if (@$sampleName != 0)
 		{
-			&coverage($kary, $abs, $sampleName);
+			&coverage($kary, $plotCircosPath, $sampleName);
 		}
 	}
 	else
 	{
-		@first4elements = @$sampleName;
+		@first6elements = @$sampleName;
 	}
-	my $lineFir4Element = join("_", @first4elements);
-	my $fileName = "$lineFir4Element"."_coverage.conf";
-	open(OUT, ">$abs/circos_coverage/$fileName")||die $!;
+	my $lineFir6Element = join("_", @first6elements);
+	my $fileName = "$lineFir6Element"."_coverage.conf";
+	open(OUT, ">$plotCircosPath/circos_coverage/$fileName")||die $!;
 	print OUT "show_scatter   = yes\nshow_line      = yes\nshow_histogram = yes\nshow_heatmap   = yes\nshow_tile      = yes\nshow_highlight = yes\nshow_link      = yes\nshow_text      = yes\nuse_rules      = yes\n\n<<include colors_fonts_patterns.conf>>\n\n<<include ideogram.conf>>\n<<include ticks.conf>>\n\n<image>\n<<include etc/image.conf>>\n</image>\n\nkaryotype         = $plotCircosPath/circos_coverage/$kary.genome.txt\nchromosomes_units = 1000000\nchromosomes_display_default = yes\n<plots>\nshow = no\n";
 	my $i = 0;
-	foreach my $sample(@first4elements)
+	foreach my $sample(@first6elements)
 	{
 		print OUT "<plot>\nshow         = conf(show_histogram)\ntype         = histogram\nfile         = $plotCircosPath/circos_coverage/$sample.out.cov\norientation  = out\nthickness    = 1\ncolor        = $$colour[$i]\nfill_under   = yes\nfill_color   = $$colour[$i]\nr0           = $$outer[$i]r\nr1           = $$inner[$i]r\nmax_gap      = 5u\nz = 10\n</plot>\n";
 		$i += 1;
 	}
-	print OUT "<plot>\nshow         = conf(show_text)\ntype = text\nfile = $plotCircosPath/circos_coverage/${lineFir4Element}_sample_name\n\nlabel_font = bold\nlabel_size = 30p\nr0         = 0.05r\nr1         = 0.25r\nshow_links = no\n\n</plot>\n\n</plots>\n\n<<include etc/housekeeping.conf>>\n";
+	print OUT "<plot>\nshow         = conf(show_text)\ntype = text\nfile = $plotCircosPath/circos_coverage/${lineFir6Element}_sample_name\n\nlabel_font = bold\nlabel_size = 30p\nr0         = 0.05r\nr1         = 0.25r\nshow_links = no\n\n</plot>\n\n</plots>\n\n<<include etc/housekeeping.conf>>\n";
 	close OUT;
 }
 
@@ -140,10 +136,122 @@ sub sampleCoverageFile
 	}
 }
 
+sub sampleCoverageFile_miRNA
+{
+	my ($sampleFile) = @_;
+	foreach my $sample (@$sampleFile)
+	{
+		open(FILE, "$plotCircosPath/circos_coverage/${sample}.cov.txt")|| die "no ${sample}.cov.txt";
+		open(OUT, ">$plotCircosPath/circos_coverage/${sample}.out.cov")||die $!;
+		while(<FILE>)
+		{
+			chomp;
+			my @data = split('\t',$_);
+			if($data[0] !~ /chr/i)
+			{
+				$data[0] = "chr".$data[0];
+			}
+			print OUT join("\t", @data[0..$#data], "\n");
+		}
+		close FILE;
+		close OUT;
+	}
+}
+
+sub sampleCoverageFile_index
+{
+	(my $index, my $sampleFile) = @_;
+	my %index;
+	open(INDEX, "$index")||die $!;
+	while(<INDEX>)
+	{
+		chomp;
+		my @data = split(/\t/, $_);
+		if($data[1] =~ /chr/)
+		{
+			$index{$data[0]} = $data[1];
+		}
+		else
+		{
+			$index{$data[0]} = "chr".$data[1];
+		}
+	}
+	close INDEX;
+	foreach my $sample (@$sampleFile)
+	{
+		open(FILE, "$plotCircosPath/circos_coverage/${sample}.genome.cov")|| die "no ${sample}.genome.cov";
+		open(OUT, ">$plotCircosPath/circos_coverage/${sample}.out.cov")||die $!;
+		while(<FILE>)
+		{
+			chomp;
+			my @data = split('\t',$_);
+			if($data[0] !~ /chr/i)
+			{
+				if($index{$data[0]})
+				{
+					$data[0] = $index{$data[0]};
+				}
+				else
+				{
+					next;
+				}
+			}
+			$data[3] = log($data[3] + 1)/log(2);
+			print OUT join("\t", @data[0..$#data], "\n");
+		}
+		close FILE;
+		close OUT;
+	}
+}
+
+sub sampleCoverageFile_miRNA_index
+{
+	(my $index, my $sampleFile) = @_;
+	my %index;
+	open(INDEX, "$index")||die $!;
+	while(<INDEX>)
+	{
+		chomp;
+		my @data = split(/\t/, $_);
+		if($data[1] =~ /chr/)
+		{
+			$index{$data[0]} = $data[1];
+		}
+		else
+		{
+			$index{$data[0]} = "chr".$data[1];
+		}
+	}
+	close INDEX;
+	foreach my $sample (@$sampleFile)
+	{
+		open(FILE, "$plotCircosPath/circos_coverage/${sample}.cov.txt")|| die "no ${sample}.cov.txt";
+		open(OUT, ">$plotCircosPath/circos_coverage/${sample}.out.cov")||die $!;
+		while(<FILE>)
+		{
+			chomp;
+			my @data = split('\t',$_);
+			if($data[0] !~ /chr/i)
+			{
+				if($index{$data[0]})
+				{
+					$data[0] = $index{$data[0]};
+				}
+				else
+				{
+					next;
+				}
+			}
+			print OUT join("\t", @data[0..$#data], "\n");
+		}
+		close FILE;
+		close OUT;
+	}
+}
 
 sub name_conf
 {
-	open(GEN, "$abs/circos_coverage/$kary.genome.txt")||die $!;
+	open(GEN, "$plotCircosPath/circos_coverage/$kary.genome.txt")||die $!;
 	my $tmpEnd = 0;
 	my %chrStart;
 	my %chrEnd;
@@ -162,15 +270,15 @@ sub name_conf
 	close GEN;
 	my ($sampleName) = @_;
 	my $colors = ['red', 'vlorange', 'yellow', 'green', 'blue', 'purple'];
-	my @first4elements;
+	my @first6elements;
 	if(@$sampleName > 5)
 	{
-		$first4elements[0] = $$sampleName[0];
-		$first4elements[1] = $$sampleName[1];
-		$first4elements[2] = $$sampleName[2];
-		$first4elements[3] = $$sampleName[3];
-		$first4elements[4] = $$sampleName[4];
-		$first4elements[5] = $$sampleName[5];
+		$first6elements[0] = $$sampleName[0];
+		$first6elements[1] = $$sampleName[1];
+		$first6elements[2] = $$sampleName[2];
+		$first6elements[3] = $$sampleName[3];
+		$first6elements[4] = $$sampleName[4];
+		$first6elements[5] = $$sampleName[5];
 		shift @$sampleName;
 		shift @$sampleName;
 		shift @$sampleName;
@@ -184,9 +292,9 @@ sub name_conf
 	}
 	else
 	{
-		@first4elements = @$sampleName;
+		@first6elements = @$sampleName;
 	}
-	my $sampleNum = @first4elements;
+	my $sampleNum = @first6elements;
 	my $span = POSIX::round($tmpEnd/$sampleNum);
 	my @labelChr;
 	my @pos;
@@ -207,33 +315,33 @@ sub name_conf
 		}
 	}
 	
-	my $lineFir4Element = join("_", @first4elements);
-	my $fileName = "$lineFir4Element"."_sample_name";
-	open(OUT, ">$abs/circos_coverage/$fileName")||die $!;
-	for(my $i = 0; $i < @first4elements; $i++)
+	my $lineFir6Element = join("_", @first6elements);
+	my $fileName = "$lineFir6Element"."_sample_name";
+	open(OUT, ">$plotCircosPath/circos_coverage/$fileName")||die $!;
+	for(my $i = 0; $i < @first6elements; $i++)
 	{
 		my $startPnt = $pos[$i];
 		my $endPnt = $pos[$i] + 100000;
-		print OUT "$labelChr[$i]\t$startPnt\t$endPnt\t$first4elements[$i]\tcolor=$$colors[$i]\n";
+		print OUT "$labelChr[$i]\t$startPnt\t$endPnt\t$first6elements[$i]\tcolor=$$colors[$i]\n";
 	}
 	close OUT;
 }
 
 sub other_scripts
 {
-	open(BANDS, ">$abs/circos_coverage/bands.conf")||die $!;
+	open(BANDS, ">$plotCircosPath/circos_coverage/bands.conf")||die $!;
 	print BANDS "show_bands            = yes\nfill_bands            = yes\nband_stroke_thickness = 2\nband_stroke_color     = white\nband_transparency     = 3\n";
 	close BANDS;
-	open(POS, ">$abs/circos_coverage/ideogram.position.conf")|| die $!;
+	open(POS, ">$plotCircosPath/circos_coverage/ideogram.position.conf")|| die $!;
 	print POS "radius           = 0.90r\nthickness        = 30p\nfill             = yes\nfill_color       = black\nstroke_thickness = 2\nstroke_color     = black\n";
 	close POS;
-	open(TICKS, ">$abs/circos_coverage/ticks.conf")||die $!;
+	open(TICKS, ">$plotCircosPath/circos_coverage/ticks.conf")||die $!;
 	print TICKS "show_ticks          = yes\nshow_tick_labels    = yes\n\n<ticks>\ntick_separation      = 5p\nlabel_separation     = 5p\nradius               = dims(ideogram,radius_outer)\nmultiplier           = 1e-6\ncolor          = black\nsize           = 20p\nthickness      = 1p\nlabel_offset   = 5p\nformat         = %d\n\n<tick>\nspacing        = 1u\nshow_label     = no\nlabel_size     = 16p\n</tick>\n\n<tick>\nspacing        = 5u\nshow_label     = no\nlabel_size     = 18p\n</tick>\n\n<tick>\nspacing        = 10u\nshow_label     = no\nlabel_size     = 20p\n</tick>\n\n<tick>\nspacing        = 20u\nshow_label     = yes\nlabel_size     = 24p\n</tick>\n\n</ticks>\n";
 	close TICKS;
-	open(LABEL, ">$abs/circos_coverage/ideogram.label.conf")||die $!;
+	open(LABEL, ">$plotCircosPath/circos_coverage/ideogram.label.conf")||die $!;
 	print LABEL "show_label       = yes\nlabel_font       = default\nlabel_radius     = 0.95r\n\nlabel_size       = 30\nlabel_parallel   = yes\nlabel_case       = lower\nlabel_format     = eval(sprintf(\"chr%s\",var(label)))\n";
 	close LABEL;
-	open(IDEO, ">$abs/circos_coverage/ideogram.conf")||die $!;
+	open(IDEO, ">$plotCircosPath/circos_coverage/ideogram.conf")||die $!;
 	print IDEO "<ideogram>\n\n<spacing>\ndefault = 0.005r\nbreak   = 0.5r\n\naxis_break_at_edge = yes\naxis_break         = yes\naxis_break_style   = 2\n\n<break_style 1>\nstroke_color = black\nfill_color   = blue\nthickness    = 0.25r\nstroke_thickness = 2\n</break>\n\n<break_style 2>\nstroke_color     = black\nstroke_thickness = 2\nthickness        = 1.5r\n</break>\n\n</spacing>\n\n<<include ideogram.position.conf>>\n<<include ideogram.label.conf>>\n<<include bands.conf>>\n\n</ideogram>\n";
 	close IDEO;
 }
@@ -241,8 +349,8 @@ sub other_scripts
 sub fai2genomeFile
 {
 	my ($kary) = @_;
-	open(FILE, "$abs/circos_coverage/$kary.fa.fai")||die $!;
-	open(OUT, ">$abs/circos_coverage/$kary.genome.txt")||die $!;
+	open(FILE, "$plotCircosPath/circos_coverage/$kary.fa.fai")||die $!;
+	open(OUT, ">$plotCircosPath/circos_coverage/$kary.genome.txt")||die $!;
 	my %match;
 	while(<FILE>)
 	{
@@ -261,7 +369,15 @@ sub fai2genomeFile
 	my $i = 30;
 	foreach my $k(sort{$a <=> $b}keys %match)
 	{
-		if($k =~ /[\._A-LN-WZ]/)
+		if($k =~ /[E-KOQSU-W]/)
+		{
+			next;
+		}
+		if($k =~ /scaffold/)
+		{
+			next;
+		}
+		if ($k =~ /random/)
 		{
 			next;
 		}
@@ -287,28 +403,157 @@ sub fai2genomeFile
 	close OUT;
 }
 
+sub fai2norm
+{
+	(my $index, my $plotCircosPath, my $fai) = @_;
+	my %index;
+	open(INDEX, "$index")||die $!;
+	while(<INDEX>)
+	{
+		chomp;
+		my @data = split(/\t/, $_);
+		if($data[1] =~ /chr/)
+		{
+			$index{$data[0]} = $data[1];
+		}
+		else
+		{
+			$index{$data[0]} = "chr".$data[1];
+		}
+	}
+	close INDEX;
+	open(IN, "$fai")||die $!;
+	open(OUT, ">$plotCircosPath/circos_coverage/$kary.fa.fai")||die $!;
+	while(<IN>)
+	{
+		chomp;
+		my @data = split(/\t/, $_);
+		if($index{$data[0]})
+		{
+			$data[0] = $index{$data[0]};
+			print OUT join("\t", @data[0..$#data], "\n");
+		}
+		else
+		{
+			next;
+		}
+	}
+	close IN;
+	close OUT;
+}
+
+sub coverage_miRNA
+{
+	(my $kary, my $plotCircosPath, my $sampleName) = @_;
+	my $colour = ['red', 'vlorange', 'yellow', 'green', 'blue', 'purple'];
+	my $outer = ["0.85", "0.73", "0.61", "0.49", "0.37", "0.25"];
+	my $inner = ["0.75", "0.63", "0.51", "0.39", "0.27", "0.15"];
+	my @first6elements;
+	if(@$sampleName >= 6)
+	{
+		$first6elements[0] = $$sampleName[0];
+		$first6elements[1] = $$sampleName[1];
+		$first6elements[2] = $$sampleName[2];
+		$first6elements[3] = $$sampleName[3];
+		$first6elements[4] = $$sampleName[4];
+		$first6elements[5] = $$sampleName[5];
+		shift @$sampleName;
+		shift @$sampleName;
+		shift @$sampleName;
+		shift @$sampleName;
+		shift @$sampleName;
+		shift @$sampleName;
+		if (@$sampleName != 0)
+		{
+			&coverage($kary, $plotCircosPath, $sampleName);
+		}
+	}
+	else
+	{
+		@first6elements = @$sampleName;
+	}
+	my $lineFir6Element = join("_", @first6elements);
+	my $fileName = "$lineFir6Element"."_coverage.conf";
+	open(OUT, ">$plotCircosPath/circos_coverage/$fileName")||die $!;
+	print OUT "show_scatter = yes\nshow_line = yes\nshow_histogram = yes\nshow_heatmap = yes\nshow_tile = yes\nshow_highlight = yes\nshow_link = yes\nshow_text = yes\nuse_rules = yes\n<<include colors_fonts_patterns.conf>>\n<<include ideogram.conf>>\n<<include ticks.conf>>\n\n<image>\n<<include etc/image.conf>>\n</image>\n\nkaryotype = $plotCircosPath/circos_coverage/$kary.genome.txt\nchromosomes_units = 1000000\nchromosomes_display_default = yes\n\n<plots>\n\nshow = no\n";
+	my $i = 0;
+	foreach my $sample(@first6elements)
+	{
+		print OUT "<plot>\nshow = conf(show_histogram)\ntype = histogram\nfile = $plotCircosPath/circos_coverage/${sample}.out.cov\norientation = out\nthickness = 1\nstroke_thickness=0\nfill_under = yes\nextend_bin = no\nr0 = $$inner[$i]r\nr1 = $$outer[$i]r\nmax_gap = 5u\ncolor = $$colour[$i]\n<rules>\n<rule>\ncondition = var(id) eq \"1\"\nfill_color = $$colour[$i]\ncolor = $$colour[$i]\nz = 10\n</rule>\n<rule>\ncondition = var(id) eq \"2\"\nfill_color = grey\ncolor = grey\nthickness = 1\nz = 20\n</rule>\n</rules>\n</plot>\n\n";
+		$i += 1;
+	}
+	print OUT "<plot>\nshow         = conf(show_text)\ntype = text\nfile = $plotCircosPath/circos_coverage/${lineFir6Element}_sample_name\nlabel_font = bold\nlabel_size = 30p\nr0         = 0.05r\nr1         = 0.25r\nshow_links = no\n</plot>\n</plots>\n<<include etc/housekeeping.conf>>\n";
+	close OUT;
+}
+
+
+
 my @Samples = split(" ", $samples);
 my $sample = \@Samples;
 my @allSamples1 = @$sample;
 my @allSamples2 = @$sample;
 my @allSamples3 = @$sample;
-my $type = "coverage";
 if($^O eq "linux")
 {
-	if($type eq "coverage")
+	if($type eq "RNA")
 	{
-		mkdir("$abs/circos_coverage");
-		system("cp $fai $abs/circos_coverage");
-		system("mv $abs/circos_coverage/*fai $abs/circos_coverage/$kary.fa.fai");
-		system("cp $covList/*genome.cov $abs/circos_coverage");
+		mkdir("$plotCircosPath/circos_coverage");
+		if($chrIndex)
+		{
+			&fai2norm($chrIndex, $plotCircosPath, $fai);
+			system("cp $covList/*genome.cov $plotCircosPath/circos_coverage");
+			my $samples2 = \@allSamples2;
+			&sampleCoverageFile_index($chrIndex, $samples2);
+		}
+		else
+		{
+			system("cp $fai $plotCircosPath/circos_coverage");
+			system("mv $plotCircosPath/circos_coverage/*fai $plotCircosPath/circos_coverage/$kary.fa.fai");
+			system("cp $covList/*genome.cov $plotCircosPath/circos_coverage");
+			my $samples2 = \@allSamples2;
+			&sampleCoverageFile($samples2);
+		}
+		
 		my $samples1 = \@allSamples1;
-		mkdir("$abs/circos_coverage/");
-		&coverage($kary, $abs, $samples1);
-		my $samples2 = \@allSamples2;
-		&sampleCoverageFile($samples2);
+		&coverage($kary, $plotCircosPath, $samples1);
 		my $samples3 = \@allSamples3;
 		&fai2genomeFile($kary);
 		&name_conf($samples3);
 		&other_scripts;
 	}
+	elsif($type eq "miRNA")
+	{
+		mkdir("$plotCircosPath/circos_coverage");
+		if($chrIndex)
+		{
+			&fai2norm($chrIndex, $plotCircosPath, $fai);
+			system("cp $covList/*cov.txt $plotCircosPath/circos_coverage");
+			my $samples2 = \@allSamples2;
+			&sampleCoverageFile_index_miRNA($chrIndex, $samples2);
+		}
+		else
+		{
+			system("cp $fai $plotCircosPath/circos_coverage");
+			system("mv $plotCircosPath/circos_coverage/*fai $plotCircosPath/circos_coverage/$kary.fa.fai");
+			system("cp $covList/*cov.txt $plotCircosPath/circos_coverage");
+			my $samples2 = \@allSamples2;
+			&sampleCoverageFile_miRNA($samples2);
+		}
+		
+		my $samples1 = \@allSamples1;
+		&coverage_miRNA($kary, $plotCircosPath, $samples1);
+		my $samples3 = \@allSamples3;
+		&fai2genomeFile($kary);
+		&name_conf($samples3);
+		&other_scripts;
+	}
+	else
+	{
+		exit "Please set the type of circos plot using the flag --type|T <RNA|miRNA>.\n";
+	}
+}
+else
+{
+	print "The program is suitable for Linux platform only.\n";
+	exit;
 }
