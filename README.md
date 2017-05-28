@@ -15,9 +15,15 @@ The first colomn is the id of chromosome. The second colomn is the start point o
 	perl EazyCircosScript.pl --type|T <RNA|miRNA> --kary|K <genome name> --fai|F <fasta index file> --chrIndex|I <chromosome Name Index> --samples|S <sample name> --cov|C <path to coverage file> --plotPath|P <path to plot Circos>
 
 --type|T <RNA|miRNA> : A required parameter. Choose the type of Circos plot.
+
 --kary|K <genome name> : A required parameter. Type the genome assembly build name. eg. hg38, GRCm38, etc.
+
 --fai|F  <fasta index file> : A required parameter. The absolute path of \*fai file of the genome.
+
 --chrIndex|I <chromosome Name Index> : An optional parameter. If the chromosome name of the genome is not normal for some genome fasta files you downloaded from NCBI, like NC_XXXXXX.X. You can make a chromosome index file, whose first and second colomns are the original chromosome name and its normal names, like 1, 2, 3, ..., X, Y
+
 --samples|S <sample name> : A required parameter. Type the sample names, like "sample1 sample2 ..."
+
 --cov|C <path to coverage file> : A required parameter. The path of coverage file.
+
 --plotPath|P <path to plot Circos> : A required parameter. The path you want to generate the Circos plot.
