@@ -361,7 +361,7 @@ sub name_conf_circRNA
 		shift @$sampleName;
 		if(@$sampleName)
 		{
-			&name_conf($sampleName);
+			&name_conf_circRNA($sampleName);
 		}
 	}
 	else
@@ -535,7 +535,7 @@ sub coverage_circRNA
 		shift @$sampleName;
 		if (@$sampleName != 0)
 		{
-			&coverage($kary, $plotCircosPath, $sampleName);
+			&coverage_circRNA($kary, $plotCircosPath, $sampleName);
 		}
 	}
 	else
