@@ -443,11 +443,23 @@ sub fai2genomeFile
 	my $i = 30;
 	foreach my $k(sort{$a <=> $b}keys %match)
 	{
+		if(length($k) > 6)
+		{
+			next;
+		}
 		if($k =~ /[E-KOQSU-W]/)
 		{
 			next;
 		}
-		if($k =~ /scaffold/)
+		if($k =~ /scaffold/i)
+		{
+			next;
+		}
+		if($k =~ /map/i)
+		{
+			next;
+		}
+		if($k =~ /rDNA/i)
 		{
 			next;
 		}
